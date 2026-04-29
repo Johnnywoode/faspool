@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'affiliates' => 'Affiliates',
+    'admin' => 'Admin',
+    'analytics' => 'Analytics',
+    'balance' => 'Balance',
+    'bulk_operations' => 'Bulk Operations',
+    'business' => 'Business',
+    'contact' => 'Contact',
+    'dashboard' => 'Dashboard',
+    'deposit' => 'Deposit',
+    'logs' => 'Activity Logs',
+    'long_term' => 'Long-term Order',
+    'main' => 'Main',
+    'management' => 'Management',
+    'pricing' => 'Pricing',
+    'providers' => 'Providers',
+    'quick_order' => 'Quick Order',
+    'referrals' => 'My Referrals',
+    'reports' => 'Reports',
+    'settings' => 'System Settings',
+    'sub_accounts' => 'Sub-accounts',
+    'support' => 'Support',
+    'tenants' => 'Tenants',
+    'tickets' => 'Tickets',
+    'users' => 'Users',
+];
