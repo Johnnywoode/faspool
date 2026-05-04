@@ -21,16 +21,18 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     // Order Routes
     Route::prefix('orders')->group(function () {
-        Route::get('/', [App\Modules\Sms\Controllers\OrderController::class, 'index'])->name('orders.index');
-        Route::get('/search', [App\Modules\Sms\Controllers\OrderController::class, 'search'])->name('orders.search');
-        Route::post('/purchase', [App\Modules\Sms\Controllers\OrderController::class, 'purchase'])->name('orders.purchase');
-        Route::get('/{id}', [App\Modules\Sms\Controllers\OrderController::class, 'show'])->name('orders.show');
-        Route::get('/{id}/check', [App\Modules\Sms\Controllers\OrderController::class, 'checkSms'])->name('orders.check');
+        Route::get('/', [\App\Http\Controllers\OrderController::class, 'index'])->name('orders.index');
+        Route::get('/search', [\App\Http\Controllers\OrderController::class, 'search'])->name('orders.search');
+        Route::post('/purchase', [\App\Http\Controllers\OrderController::class, 'purchase'])->name('orders.purchase');
+        Route::get('/{order:uid}', [\App\Http\Controllers\OrderController::class, 'show'])->name('orders.show');
+        Route::get('/{order:uid}/check', [\App\Http\Controllers\OrderController::class, 'checkSms'])->name('orders.check');
     });
 
     // Rental Routes
     Route::prefix('rentals')->group(function () {
-        Route::get('/', function () { return view('rentals.index'); })->name('rentals.index');
+        Route::get('/', [\App\Http\Controllers\RentalController::class, 'index'])->name('rentals.index');
+        Route::post('/', [\App\Http\Controllers\RentalController::class, 'store'])->name('rentals.store');
+        Route::post('/{rental:uid}/extend', [\App\Http\Controllers\RentalController::class, 'extend'])->name('rentals.extend');
     });
 
     // Wallet Routes
@@ -43,12 +45,18 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     // Sub-accounts Routes
     Route::prefix('subaccounts')->group(function () {
-        Route::get('/', function () { return view('subaccounts.index'); })->name('subaccounts.index');
+        Route::get('/', [\App\Http\Controllers\SubAccountController::class, 'index'])->name('subaccounts.index');
+        Route::post('/', [\App\Http\Controllers\SubAccountController::class, 'store'])->name('subaccounts.store');
+        Route::post('/{subAccount:uid}/transfer', [\App\Http\Controllers\SubAccountController::class, 'transfer'])->name('subaccounts.transfer');
     });
 
     // Support Routes
     Route::prefix('support')->group(function () {
-        Route::get('/', function () { return view('support.index'); })->name('support.index');
+        Route::get('/', [\App\Http\Controllers\SupportController::class, 'index'])->name('support.index');
+        Route::post('/', [\App\Http\Controllers\SupportController::class, 'store'])->name('support.store');
+        Route::get('/{ticket:uid}', [\App\Http\Controllers\SupportController::class, 'show'])->name('support.show');
+        Route::post('/{ticket:uid}/reply', [\App\Http\Controllers\SupportController::class, 'reply'])->name('support.reply');
+        Route::post('/{ticket:uid}/close', [\App\Http\Controllers\SupportController::class, 'close'])->name('support.close');
     });
 
     // Impersonation
@@ -56,7 +64,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     // Referral Routes
     Route::prefix('referrals')->group(function () {
-        Route::get('/', function () { return view('referrals.index'); })->name('referrals.index');
+        Route::get('/', [\App\Http\Controllers\ReferralController::class, 'index'])->name('referrals.index');
     });
 
     // ADMIN ROUTES

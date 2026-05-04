@@ -122,7 +122,15 @@ class MenuService
             [
                 'name'    => __('menu.admin'),
                 'is_label' => true,
-                'access'  => 'manage tenants|manage users|manage providers|manage pricing|manage settings|view analytics',
+                'access'  => 'view dashboard|manage tenants|manage users|manage providers|manage pricing|manage settings|view analytics',
+            ],
+            [
+                'url'     => route('admin.dashboard'),
+                'name'    => __('menu.dashboard'),
+                'icon'    => 'house-door',
+                'i18n'    => 'dashboard',
+                'access'  => 'view dashboard',
+                'slug'    => 'admin.dashboard',
             ],
             [
                 'url'     => '',
@@ -130,7 +138,7 @@ class MenuService
                 'icon'    => 'gear',
                 'i18n'    => 'management',
                 'slug'    => 'admin',
-                'access'  => 'manage tenants|manage users|manage providers|manage pricing|manage settings|view analytics',
+                'access'  => 'view dashboard|manage tenants|manage users|manage providers|manage pricing|manage settings|view analytics|view earnings report|view usage report|view number performance|view order analytics|export reports|bulk import numbers|bulk export orders|bulk cancel orders|bulk refund',
                 'submenu' => [
                     [
                         'url'    => route('admin.tenants.index'),
@@ -279,6 +287,7 @@ class MenuService
 
     /**
      * Filter menu items based on user permissions.
+     * Handles nested submenus recursively.
      */
     protected function filterMenu(array $items): array
     {
@@ -288,23 +297,35 @@ class MenuService
         $filtered = [];
 
         foreach ($items as $item) {
+            // Check access for current item
             if (isset($item['access'])) {
                 $permissions = explode('|', $item['access']);
                 $hasAccess = false;
                 foreach ($permissions as $permission) {
-                    if ($user->can($permission)) {
+                    if ($user->can(trim($permission))) {
                         $hasAccess = true;
                         break;
                     }
                 }
-                if (!$hasAccess) continue;
+                if (!$hasAccess) {
+                    continue;
+                }
             }
 
-            if (isset($item['submenu'])) {
-                $item['submenu'] = $this->filterMenu($item['submenu']);
-                if (empty($item['submenu'])) continue;
+            // Handle submenu recursively
+            if (isset($item['submenu']) && is_array($item['submenu'])) {
+                $filteredSubmenu = $this->filterMenu($item['submenu']);
+                
+                // Only keep the parent item if it has visible submenu items
+                if (!empty($filteredSubmenu)) {
+                    $item['submenu'] = $filteredSubmenu;
+                    $filtered[] = $item;
+                }
+                // Skip parent if no submenu items are accessible
+                continue;
             }
 
+            // Add items without submenu or labels
             $filtered[] = $item;
         }
 

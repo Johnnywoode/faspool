@@ -51,7 +51,7 @@
                 <div class="card bg-surface border-secondary border-opacity-10 rounded-4 shadow-sm h-100">
                     <div class="card-body">
                         <div class="text-muted small mb-2 text-uppercase fw-bold">Wallet Balances</div>
-                        <div class="h3 fw-bold mb-0 text-white">${{ number_format($tenant->wallets()->sum('balance'), 2) }}</div>
+                        <div class="h3 fw-bold mb-0 text-white">GHS{{ number_format($tenant->total_wallet_balance, 2) }}</div>
                         <div class="text-muted small mt-2">Across all users</div>
                     </div>
                 </div>
@@ -69,7 +69,7 @@
 
         <div class="row g-4">
             <!-- Order Trends -->
-            <div class="col-lg-8">
+            <div class="col-lg-7">
                 <div class="card bg-surface border-secondary border-opacity-10 rounded-4 shadow-sm">
                     <div class="card-header bg-transparent border-secondary border-opacity-10 py-3 px-4">
                         <h5 class="card-title mb-0">Order Activity</h5>
@@ -83,7 +83,7 @@
             </div>
 
             <!-- Recent Users -->
-            <div class="col-lg-4">
+            <div class="col-lg-5">
                 <div class="card bg-surface border-secondary border-opacity-10 rounded-4 shadow-sm h-100">
                     <div class="card-header bg-transparent border-secondary border-opacity-10 py-3 px-4">
                         <h5 class="card-title mb-0">Recent Users</h5>

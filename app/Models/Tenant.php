@@ -46,4 +46,14 @@ class Tenant extends Model
     {
         return $this->hasMany(Wallet::class);
     }
+
+    public function walletBalances()
+    {
+        return $this->hasManyThrough(WalletBalance::class, Wallet::class);
+    }
+
+    public function getTotalWalletBalanceAttribute()
+    {
+        return $this->walletBalances()->sum('balance');
+    }
 }

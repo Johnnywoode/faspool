@@ -12,11 +12,10 @@
 </div>
 
 <div class="sidebar-content py-3">
-    <ul class="nav flex-column gap-1 px-2">
+    <ul class="nav flex-column gap-1 px-3">
         @if(isset($isImpersonating) && $isImpersonating)
             <li class="nav-item mb-2">
-                <a class="nav-link d-flex align-items-center gap-3 py-2 px-3 rounded-3 bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25" 
-                   href="{{ route('impersonate.stop') }}">
+                <a class="nav-link d-flex align-items-center gap-3 py-2 px-3 rounded-3 bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25" href="{{ route('impersonate.stop') }}">
                     <i class="ph ph-sign-out fs-5"></i>
                     <span>Stop Impersonation</span>
                 </a>
@@ -25,13 +24,12 @@
 
         @foreach($menuItems as $item)
             @if(isset($item['is_label']) && $item['is_label'])
-                {{-- Menu Label --}}
                 <li class="nav-label mt-3 mb-1 small text-uppercase fw-bold text-secondary px-2" style="font-size: 0.7rem; letter-spacing: 1px;">
                     {{ $item['name'] }}
                 </li>
             @elseif(isset($item['submenu']))
                 {{-- Menu item with submenu --}}
-                <li class="nav-item w-100">
+                <li class="nav-item">
                     @php
                         $isActive = request()->routeIs($item['slug'] . '*') || 
                                    (isset($item['submenu']) && collect($item['submenu'])->pluck('slug')->contains(function($slug) { 
@@ -39,24 +37,25 @@
                                    }));
                     @endphp
                     
-                    <a class="nav-link d-flex align-items-center gap-3 py-2 px-3 rounded-3 text-secondary {{ $isActive ? 'active bg-primary text-white' : '' }}" 
+                    <a class="nav-link d-flex align-items-center gap-3 py-2 px-2 rounded-3 text-secondary {{ $isActive ? 'active bg-primary text-white' : '' }}" 
                        data-bs-toggle="collapse" 
                        href="#menu-{{ Str::slug($item['name']) }}" 
                        role="button" 
                        aria-expanded="{{ $isActive ? 'true' : 'false' }}">
                         <i class="ph ph-{{ $item['icon'] ?? 'app-window' }} fs-5"></i>
-                        <span class="flex-grow-1">{{ $item['name'] }}</span>
-                        <i class="bi bi-chevron-down small transition-all {{ $isActive ? '' : 'rotate-n90' }}"></i>
+                        <span>{{ $item['name'] }}</span>
+                        <i class="bi bi-chevron-down ms-auto small transition-all {{ $isActive ? '' : 'rotate-n90' }}"></i>
                     </a>
                     
                     <div class="collapse {{ $isActive ? 'show' : '' }}" id="menu-{{ Str::slug($item['name']) }}">
+                        {{-- Include submenu partial recursively --}}
                         @include('partials.submenu', ['submenuItems' => $item['submenu']])
                     </div>
                 </li>
             @else
                 {{-- Regular menu item --}}
-                <li class="nav-item w-100">
-                    <a class="nav-link d-flex align-items-center gap-3 py-2 px-3 rounded-3 text-secondary {{ request()->routeIs($item['slug'] ?? 'none') ? 'active bg-primary text-white' : '' }}" 
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center gap-3 py-2 px-2 rounded-3 text-secondary {{ request()->routeIs($item['slug'] ?? 'none') ? 'active bg-primary text-white' : '' }}" 
                        href="{{ $item['url'] }}">
                         <i class="ph ph-{{ $item['icon'] ?? 'app-window' }} fs-5"></i>
                         <span>{{ $item['name'] }}</span>
@@ -81,28 +80,11 @@
     }
     .nav-label {
         user-select: none;
-        opacity: 0.7;
     }
     .rotate-n90 {
         transform: rotate(-90deg);
     }
     .transition-all {
         transition: all 0.3s ease;
-    }
-    
-    /* Fix for nested submenu alignment */
-    #sidebar .collapse .nav-link {
-        font-size: 0.85rem;
-        padding-left: 0.75rem;
-    }
-    
-    /* Make sure nested submenus don't overflow */
-    #sidebar .nav {
-        width: 100%;
-    }
-    
-    /* Better spacing for deeply nested items */
-    .nav .nav .nav {
-        padding-left: 0.5rem;
     }
 </style>

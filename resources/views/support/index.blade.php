@@ -16,22 +16,24 @@
                 <h6 class="mb-0 fw-bold"><i class="bi bi-plus-circle me-2 text-primary"></i> Create Ticket</h6>
             </div>
             <div class="card-body p-4">
-                <form>
+                <form action="{{ route('support.store') }}" method="POST">
+                    @csrf
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted text-uppercase">Subject</label>
-                            <input type="text" class="form-control bg-dark border-secondary border-opacity-20 text-white" placeholder="Brief description of your issue">
+                        <div class="col-md-8">
+                            <label class="form-label small text-muted text-uppercase fw-bold">Subject</label>
+                            <input type="text" name="subject" class="form-control bg-dark border-secondary border-opacity-20 text-white" placeholder="Brief description of your issue" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted text-uppercase">Related Order (Optional)</label>
-                            <select class="form-select bg-dark border-secondary border-opacity-20 text-white">
-                                <option selected disabled>Select an order...</option>
-                                <option>Order #12345 - WhatsApp Verification</option>
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted text-uppercase fw-bold">Priority</label>
+                            <select name="priority" class="form-select bg-dark border-secondary border-opacity-20 text-white">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label small text-muted text-uppercase">Message</label>
-                            <textarea class="form-control bg-dark border-secondary border-opacity-20 text-white" rows="5" placeholder="Describe your issue in detail..."></textarea>
+                            <label class="form-label small text-muted text-uppercase fw-bold">Message</label>
+                            <textarea name="message" class="form-control bg-dark border-secondary border-opacity-20 text-white" rows="5" placeholder="Describe your issue in detail..." required></textarea>
                         </div>
                         <div class="col-12">
                             <button type="submit" class="btn btn-primary px-5 py-2 rounded-3 fw-bold">
@@ -47,60 +49,58 @@
         <div class="card bg-surface border-secondary border-opacity-10 rounded-4 shadow-sm">
             <div class="card-header bg-transparent border-secondary border-opacity-10 py-3 px-4 d-flex align-items-center justify-content-between">
                 <h6 class="mb-0 fw-bold"><i class="bi bi-ticket-perforated me-2 text-primary"></i> My Tickets</h6>
-                <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-1 rounded-pill small">0 Open</span>
+                <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-1 rounded-pill small">{{ $tickets->total() }} Total</span>
             </div>
             <div class="card-body p-0">
-                <div class="text-center py-5">
-                    <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
-                    <p class="text-muted mb-0">No support tickets yet.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- FAQ Section -->
-        <div class="card bg-surface border-secondary border-opacity-10 rounded-4 shadow-sm mt-4">
-            <div class="card-header bg-transparent border-secondary border-opacity-10 py-3 px-4">
-                <h6 class="mb-0 fw-bold"><i class="bi bi-question-circle me-2 text-primary"></i> Frequently Asked Questions</h6>
-            </div>
-            <div class="card-body p-4">
-                <div class="accordion accordion-dark" id="faqAccordion">
-                    <div class="accordion-item bg-transparent border-secondary border-opacity-10">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button bg-dark text-white collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                                How long does it take to receive SMS?
-                            </button>
-                        </h2>
-                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body text-muted small">
-                                Most SMS messages arrive within 1-3 minutes. If you don't receive SMS within 15 minutes, you can cancel the order and get a refund.
-                            </div>
-                        </div>
+                @if($tickets->isEmpty())
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
+                        <p class="text-muted mb-0">No support tickets yet.</p>
                     </div>
-                    <div class="accordion-item bg-transparent border-secondary border-opacity-10">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button bg-dark text-white collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                                Can I get a refund if SMS is not received?
-                            </button>
-                        </h2>
-                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body text-muted small">
-                                Yes! If your order expires without receiving SMS, the amount will be refunded to your wallet automatically.
-                            </div>
-                        </div>
+                @else
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0 align-middle">
+                            <thead class="bg-secondary bg-opacity-5">
+                                <tr>
+                                    <th class="px-4 py-3 small text-uppercase">Ticket ID</th>
+                                    <th class="py-3 small text-uppercase">Subject</th>
+                                    <th class="py-3 small text-uppercase">Status</th>
+                                    <th class="py-3 small text-uppercase">Last Update</th>
+                                    <th class="px-4 py-3 text-end small text-uppercase">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($tickets as $ticket)
+                                    <tr>
+                                        <td class="px-4 py-3">
+                                            <div class="fw-bold text-white small">{{ $ticket->uid }}</div>
+                                        </td>
+                                        <td class="py-3">
+                                            <div class="text-white small">{{ $ticket->subject }}</div>
+                                            <div class="text-muted small" style="font-size: 0.7rem;">Priority: {{ ucfirst($ticket->priority) }}</div>
+                                        </td>
+                                        <td class="py-3">
+                                            <span class="badge bg-{{ $ticket->status === 'open' ? 'warning' : ($ticket->status === 'answered' ? 'success' : 'secondary') }} bg-opacity-10 text-{{ $ticket->status === 'open' ? 'warning' : ($ticket->status === 'answered' ? 'success' : 'secondary') }} px-2 py-1 rounded small">
+                                                {{ strtoupper($ticket->status) }}
+                                            </span>
+                                        </td>
+                                        <td class="py-3 text-muted small">
+                                            {{ $ticket->updated_at->diffForHumans() }}
+                                        </td>
+                                        <td class="px-4 py-3 text-end">
+                                            <a href="{{ route('support.show', $ticket->uid) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                                View Thread
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="accordion-item bg-transparent border-secondary border-opacity-10">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button bg-dark text-white collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                                What payment methods are accepted?
-                            </button>
-                        </h2>
-                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body text-muted small">
-                                We currently accept Paystack payments (cards, bank transfers). More payment methods will be added soon.
-                            </div>
-                        </div>
+                    <div class="p-3 border-top border-secondary border-opacity-10">
+                        {{ $tickets->links() }}
                     </div>
-                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -108,7 +108,5 @@
 
 <style>
     .bg-surface { background-color: var(--surface-dark); }
-    .accordion-dark .accordion-button { box-shadow: none; }
-    .accordion-dark .accordion-button:not(.collapsed) { background: rgba(13, 110, 253, 0.1); color: #0d6efd; }
 </style>
 @endsection

@@ -76,6 +76,56 @@
             margin-left: calc(-1 * var(--sidebar-width));
         }
 
+        /* Sidebar menu improvements */
+        #sidebar .nav-item {
+            width: 100%;
+        }
+
+        #sidebar .nav-link {
+            white-space: nowrap;
+            width: 100%;
+        }
+
+        #sidebar .nav-link span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Ensure collapse icons don't wrap */
+        #sidebar .nav-link i:last-child {
+            flex-shrink: 0;
+        }
+
+        /* Better nested menu indentation */
+        #sidebar .collapse .nav {
+            padding-left: 0.5rem;
+        }
+
+        /* Second level nested menus */
+        #sidebar .collapse .collapse .nav {
+            padding-left: 1rem;
+        }
+
+        /* Make submenu items slightly smaller */
+        #sidebar .collapse .nav-link {
+            font-size: 0.8125rem;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+
+        /* Active submenu styling */
+        #sidebar .collapse .nav-link.active {
+            background-color: rgba(13, 110, 253, 0.1) !important;
+            color: #0d6efd !important;
+            font-weight: 600;
+        }
+
+        /* Consistent icon sizing */
+        #sidebar .nav-link i {
+            width: 1.25rem;
+            text-align: center;
+        }
+
         #content {
             flex-grow: 1;
             margin-left: var(--sidebar-width);
@@ -92,7 +142,7 @@
         }
 
         .navbar {
-            height: var(--topbar-height);
+            /* height: var(--topbar-height); */
             background-color: var(--bs-navbar-bg) !important;
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--bs-border-color);
