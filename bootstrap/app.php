@@ -16,7 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant' => \App\Http\Middleware\TenantMiddleware::class,
             'role' => RoleMiddleware::class,
         ]);
-        $middleware->appendToGroup('web', 'tenant');
+        $middleware->web(append: [
+            \App\Http\Middleware\TenantMiddleware::class,
+            \App\Http\Middleware\ImpersonationMiddleware::class,
+        ]);
         $middleware->appendToGroup('api', 'tenant');
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name')) - Dashboard</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,6 +13,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
@@ -142,9 +144,50 @@
     <script src="https://unpkg.com/@popperjs/core@2"></script>
     <script src="https://unpkg.com/tippy.js@6"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <style>
+        /* Select2 Dark Theme Overrides */
+        .select2-container--default .select2-selection--single {
+            background-color: var(--bs-secondary-bg) !important;
+            border: 1px solid var(--bs-border-color) !important;
+            height: 45px !important;
+            border-radius: 8px !important;
+            display: flex;
+            align-items: center;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: var(--bs-body-color) !important;
+            padding-left: 12px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 43px !important;
+        }
+        .select2-dropdown {
+            background-color: var(--bs-secondary-bg) !important;
+            border: 1px solid var(--bs-border-color) !important;
+            color: var(--bs-body-color) !important;
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: var(--bs-primary) !important;
+        }
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            background-color: var(--bs-tertiary-bg) !important;
+            border: 1px solid var(--bs-border-color) !important;
+            color: var(--bs-body-color) !important;
+        }
+    </style>
 
     <script>
-        AOS.init({ duration: 800, once: true });
+        $(document).ready(function() {
+            // Global Select2 Initializer
+            $('select').select2({
+                width: '100%',
+                placeholder: 'Select an option',
+                allowClear: true
+            });
+            
+            AOS.init({ duration: 800, once: true });
 
         function showToast(type, message, title) {
             Swal.mixin({

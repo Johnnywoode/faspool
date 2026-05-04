@@ -1,225 +1,310 @@
 
-
 <style>
-    /* Only dynamic state styles that can't be represented by static Bootstrap classes */
-    .transition {
-        transition: all 0.2s ease;
+    /* Premium Aesthetics for Offcanvas */
+    .offcanvas {
+        background-color: #1a1d24 !important; /* Dark surface match */
+        color: #e2e8f0;
+        border-left: 1px solid rgba(255, 255, 255, 0.05);
     }
     
-    .hover-bg-light:hover {
-        background-color: rgba(var(--bs-secondary-rgb), 0.05);
+    .offcanvas-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 1.25rem 1.5rem;
     }
     
-    .hover-bg-danger-transparent:hover {
-        background-color: rgba(var(--bs-danger-rgb), 0.05);
+    .offcanvas-title {
+        font-weight: 700;
+        letter-spacing: -0.02em;
     }
-    
-    .cursor-pointer {
-        cursor: pointer;
-    }
-    
-    /* Theme radio button active state */
-    .theme-radio.active {
-        background-color: var(--bs-primary) !important;
-        border-color: var(--bs-primary) !important;
-        box-shadow: inset 0 0 0 2px var(--bs-body-bg);
-    }
-    
-    /* Checkbox checked state */
-    .pref-checkbox.checked {
-        background-color: var(--bs-primary) !important;
-        border-color: var(--bs-primary) !important;
-        position: relative;
-    }
-    
-    .pref-checkbox.checked::after {
-        content: '✓';
-        font-size: 12px;
-        color: white;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-    
-    /* Custom scrollbar (optional enhancement) */
+
     .offcanvas-body {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(var(--bs-secondary-rgb), 0.2) transparent;
+        padding: 1.5rem;
     }
-    
-    .offcanvas-body::-webkit-scrollbar {
-        width: 4px;
-    }
-    
-    .offcanvas-body::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    
-    .offcanvas-body::-webkit-scrollbar-thumb {
-        background-color: rgba(var(--bs-secondary-rgb), 0.2);
-        border-radius: 10px;
-    }
-    
-    .offcanvas-body::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(var(--bs-secondary-rgb), 0.3);
-    }
-    
-    /* Notification items */
-    .notification-item {
+
+    /* List items in Preferences */
+    .pref-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
         padding: 1rem;
-        border-bottom: 1px solid rgba(var(--bs-secondary-rgb), 0.08);
+        margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: block;
+        color: inherit;
+    }
+    
+    .pref-item:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(13, 110, 253, 0.3);
+        color: inherit;
+    }
+
+    .pref-item.active {
+        border-color: #0d6efd;
+        background: rgba(13, 110, 253, 0.05);
+    }
+
+    .pref-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        font-size: 1.2rem;
+        color: #94a3b8;
+    }
+    
+    .active .pref-icon {
+        color: #0d6efd;
+        background: rgba(13, 110, 253, 0.1);
+    }
+
+    .pref-content {
+        flex: 1;
+        margin-left: 1rem;
+    }
+
+    .pref-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.1rem;
+        display: block;
+    }
+
+    .pref-subtitle {
+        font-size: 0.8rem;
+        color: #64748b;
+        display: block;
+    }
+
+    /* Radio/Checkbox custom style */
+    .pref-radio {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         transition: all 0.2s;
-        cursor: pointer;
+    }
+
+    .active .pref-radio {
+        border-color: #0d6efd;
+    }
+
+    .active .pref-radio::after {
+        content: '';
+        width: 10px;
+        height: 10px;
+        background: #0d6efd;
+        border-radius: 50%;
+    }
+
+    .pref-check {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .checked .pref-check {
+        border-color: #0d6efd;
+        background: #0d6efd;
+    }
+
+    .checked .pref-check::after {
+        content: '✓';
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    /* Section Labels */
+    .pref-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #475569;
+        margin-bottom: 0.75rem;
+        margin-top: 1.5rem;
+        letter-spacing: 0.05em;
     }
     
-    .notification-item:hover {
-        background-color: rgba(var(--bs-secondary-rgb), 0.03);
+    .pref-label:first-child {
+        margin-top: 0;
+    }
+
+    /* Notification specific */
+    .notif-header-sub {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 2rem;
     }
     
-    /* Offcanvas width classes */
-    .offcanvas-sm { width: 300px !important; }
-    .offcanvas-md { width: 500px !important; }
-    .offcanvas-lg { width: 800px !important; }
+    .mark-all {
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .notif-empty {
+        text-align: center;
+        margin-top: 4rem;
+    }
     
-    @media (max-width: 576px) {
-        .offcanvas-sm, .offcanvas-md, .offcanvas-lg { width: 100% !important; }
+    .notif-empty-icon {
+        font-size: 3rem;
+        color: #1e293b;
+        margin-bottom: 1rem;
+    }
+
+    /* Offcanvas width */
+    .offcanvas-md {
+        width: 420px !important;
     }
 </style>
 
-
 <!-- Preferences Offcanvas -->
-<div class="offcanvas offcanvas-end offcanvas-md border-start-0" tabindex="-1" id="preferencesOffcanvas" aria-labelledby="preferencesOffcanvasLabel">
-    <div class="offcanvas-header border-bottom">
-        <h5 class="offcanvas-title fw-semibold" id="preferencesOffcanvasLabel">
-            Preferences
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+<div class="offcanvas offcanvas-end offcanvas-md" tabindex="-1" id="preferencesOffcanvas">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title">Preferences</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
     </div>
-
-    <div class="offcanvas-body p-0">
-        <!-- Your account section -->
-        <div class="px-3 pt-3">
-            <div class="text-secondary text-uppercase small fw-semibold mb-2">Your account</div>
-            
-            <a href="#" class="text-decoration-none d-block hover-bg-light rounded-3 transition">
-                <div class="d-flex align-items-center justify-content-between py-3 px-2">
-                    <div>
-                        <div class="fw-medium text-body">Order history</div>
-                        <div class="small text-secondary">View your previous orders</div>
-                    </div>
-                    <i class="bi bi-chevron-right text-secondary opacity-50"></i>
+    <div class="offcanvas-body">
+        <div class="pref-label">Your account</div>
+        
+        <a href="{{ route('orders.index') }}" class="pref-item">
+            <div class="d-flex align-items-center">
+                <div class="pref-icon"><i class="ph ph-shopping-cart"></i></div>
+                <div class="pref-content">
+                    <span class="pref-title">Order history</span>
+                    <span class="pref-subtitle">View your previous orders</span>
                 </div>
-            </a>
-            
-            <a href="#" class="text-decoration-none d-block hover-bg-light rounded-3 transition">
-                <div class="d-flex align-items-center justify-content-between py-3 px-2">
-                    <div>
-                        <div class="fw-medium text-body">Account settings</div>
-                        <div class="small text-secondary">View your account settings</div>
-                    </div>
-                    <i class="bi bi-chevron-right text-secondary opacity-50"></i>
-                </div>
-            </a>
-            
-            <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="text-decoration-none d-block hover-bg-danger-transparent rounded-3 transition">
-                <div class="d-flex align-items-center justify-content-between py-3 px-2">
-                    <div>
-                        <div class="fw-medium text-danger">Logout</div>
-                        <div class="small text-danger opacity-75">Log out of your account</div>
-                    </div>
-                    <i class="bi bi-chevron-right text-danger opacity-50"></i>
-                </div>
-            </a>
-        </div>
-
-        <hr class="my-2 opacity-25">
-
-        <!-- Color mode section -->
-        <div class="px-3">
-            <div class="text-secondary text-uppercase small fw-semibold mb-2 mt-2">Color mode</div>
-            
-            <div class="theme-option d-flex align-items-center justify-content-between py-3 px-2 rounded-3 transition cursor-pointer hover-bg-light" data-theme="light">
-                <div>
-                    <div class="fw-medium text-body">Light theme</div>
-                    <div class="small text-secondary">Set light theme or reset to default</div>
-                </div>
-                <div class="rounded-circle border border-secondary border-opacity-25 theme-radio" style="width: 18px; height: 18px;"></div>
+                <i class="bi bi-chevron-right text-secondary opacity-50"></i>
             </div>
-            
-            <div class="theme-option d-flex align-items-center justify-content-between py-3 px-2 rounded-3 transition cursor-pointer hover-bg-light" data-theme="dark">
-                <div>
-                    <div class="fw-medium text-body">Dark theme</div>
-                    <div class="small text-secondary">Switch to dark theme</div>
+        </a>
+
+        <a href="#" class="pref-item">
+            <div class="d-flex align-items-center">
+                <div class="pref-icon"><i class="ph ph-gear"></i></div>
+                <div class="pref-content">
+                    <span class="pref-title">Account settings</span>
+                    <span class="pref-subtitle">View your account settings</span>
                 </div>
-                <div class="rounded-circle border border-secondary border-opacity-25 theme-radio" style="width: 18px; height: 18px;"></div>
+                <i class="bi bi-chevron-right text-secondary opacity-50"></i>
             </div>
-            
-            <div class="theme-option d-flex align-items-center justify-content-between py-3 px-2 rounded-3 transition cursor-pointer hover-bg-light" data-theme="auto">
-                <div>
-                    <div class="fw-medium text-body">Auto theme</div>
-                    <div class="small text-secondary">Set theme based on system mode</div>
+        </a>
+
+        <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="pref-item border-danger-subtle">
+            <div class="d-flex align-items-center">
+                <div class="pref-icon text-danger bg-danger bg-opacity-10"><i class="ph ph-sign-out"></i></div>
+                <div class="pref-content">
+                    <span class="pref-title text-danger">Logout</span>
+                    <span class="pref-subtitle text-danger text-opacity-50">Log out of your account</span>
                 </div>
-                <div class="rounded-circle border border-secondary border-opacity-25 theme-radio" style="width: 18px; height: 18px;"></div>
+                <i class="bi bi-chevron-right text-danger opacity-50"></i>
+            </div>
+        </a>
+
+        <div class="pref-label">Color mode</div>
+
+        <div class="pref-item theme-option" data-theme="light">
+            <div class="d-flex align-items-center">
+                <div class="pref-icon"><i class="ph ph-sun"></i></div>
+                <div class="pref-content">
+                    <span class="pref-title">Light theme</span>
+                    <span class="pref-subtitle">Set light theme or reset to default</span>
+                </div>
+                <div class="pref-radio"></div>
             </div>
         </div>
 
-        <hr class="my-2 opacity-25">
-
-        <!-- Audio mode section -->
-        <div class="px-3">
-            <div class="text-secondary text-uppercase small fw-semibold mb-2 mt-2">Audio mode</div>
-            
-            <div class="pref-option d-flex align-items-center justify-content-between py-3 px-2 rounded-3 transition cursor-pointer hover-bg-light" data-pref="audio">
-                <div>
-                    <div class="fw-medium text-body">Audio</div>
-                    <div class="small text-secondary">Toggle the audio on and off</div>
+        <div class="pref-item theme-option" data-theme="dark">
+            <div class="d-flex align-items-center">
+                <div class="pref-icon"><i class="ph ph-moon"></i></div>
+                <div class="pref-content">
+                    <span class="pref-title">Dark theme</span>
+                    <span class="pref-subtitle">Switch to dark theme</span>
                 </div>
-                <div class="rounded border border-secondary border-opacity-25 pref-checkbox" style="width: 20px; height: 20px;"></div>
+                <div class="pref-radio"></div>
             </div>
         </div>
 
-        <hr class="my-2 opacity-25">
-
-        <!-- Prompts section -->
-        <div class="px-3 pb-3">
-            <div class="text-secondary text-uppercase small fw-semibold mb-2 mt-2">Prompts</div>
-            
-            <div class="pref-option d-flex align-items-center justify-content-between py-3 px-2 rounded-3 transition cursor-pointer hover-bg-light" data-pref="resend">
-                <div>
-                    <div class="fw-medium text-body">Resend</div>
-                    <div class="small text-secondary">Disable resend prompt</div>
+        <div class="pref-item theme-option" data-theme="auto">
+            <div class="d-flex align-items-center">
+                <div class="pref-icon"><i class="ph ph-monitor"></i></div>
+                <div class="pref-content">
+                    <span class="pref-title">Auto theme</span>
+                    <span class="pref-subtitle">Set theme based on system mode</span>
                 </div>
-                <div class="rounded border border-secondary border-opacity-25 pref-checkbox" style="width: 20px; height: 20px;"></div>
+                <div class="pref-radio"></div>
             </div>
-            
-            <div class="pref-option d-flex align-items-center justify-content-between py-3 px-2 rounded-3 transition cursor-pointer hover-bg-light" data-pref="refund">
-                <div>
-                    <div class="fw-medium text-body">Refund</div>
-                    <div class="small text-secondary">Disable refund prompt</div>
+        </div>
+
+        <div class="pref-label">Audio mode</div>
+
+        <div class="pref-item pref-toggle" data-pref="audio">
+            <div class="d-flex align-items-center">
+                <div class="pref-icon"><i class="ph ph-speaker-high"></i></div>
+                <div class="pref-content">
+                    <span class="pref-title">Audio</span>
+                    <span class="pref-subtitle">Toggle the audio on and off</span>
                 </div>
-                <div class="rounded border border-secondary border-opacity-25 pref-checkbox" style="width: 20px; height: 20px;"></div>
+                <div class="pref-check"></div>
+            </div>
+        </div>
+
+        <div class="pref-label">Prompts</div>
+
+        <div class="pref-item pref-toggle" data-pref="resend">
+            <div class="d-flex align-items-center">
+                <div class="pref-icon"><i class="ph ph-arrows-counter-clockwise"></i></div>
+                <div class="pref-content">
+                    <span class="pref-title">Resend</span>
+                    <span class="pref-subtitle">Disable resend prompt</span>
+                </div>
+                <div class="pref-check"></div>
+            </div>
+        </div>
+
+        <div class="pref-item pref-toggle" data-pref="refund">
+            <div class="d-flex align-items-center">
+                <div class="pref-icon"><i class="ph ph-arrows-counter-clockwise"></i></div>
+                <div class="pref-content">
+                    <span class="pref-title">Refund</span>
+                    <span class="pref-subtitle">Disable refund prompt</span>
+                </div>
+                <div class="pref-check"></div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Notifications Offcanvas -->
-<div class="offcanvas offcanvas-end offcanvas-sm border-start-0" tabindex="-1" id="notificationsOffcanvas" aria-labelledby="notificationsLabel">
-    <div class="offcanvas-header border-bottom">
-        <h5 class="offcanvas-title fw-semibold" id="notificationsLabel">Notifications</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+<div class="offcanvas offcanvas-end offcanvas-md" tabindex="-1" id="notificationsOffcanvas">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title">Notifications</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
     </div>
-
-    <div class="offcanvas-body p-0">
-        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
-            <span class="fw-medium small">New notifications</span>
-            <a href="#" class="text-primary text-decoration-none small" onclick="markAllAsRead(); return false;">Mark all as read</a>
+    <div class="offcanvas-body">
+        <div class="notif-header-sub d-flex justify-content-between align-items-center">
+            <span>New notifications</span>
+            <a href="#" class="mark-all" onclick="markAllAsRead(); return false;">Mark all as read</a>
         </div>
         
         <div id="active_notifications_list">
-            <div class="text-center py-5">
-                <i class="bi bi-bell-slash fs-1 d-block mb-2 text-secondary opacity-50"></i>
+            <div class="notif-empty">
+                <div class="notif-empty-icon"><i class="ph ph-bell-slash"></i></div>
                 <div class="text-secondary small">You have no new notifications.</div>
             </div>
         </div>
@@ -227,249 +312,64 @@
 </div>
 
 <script>
-// Theme Switcher Logic
+    // Theme Switcher Logic
     (function() {
-        // Get saved theme or default
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        
-        // Apply theme function
-        function applyTheme(theme) {
-            if (theme === 'auto') {
-                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                document.documentElement.setAttribute('data-bs-theme', systemPrefersDark ? 'dark' : 'light');
-            } else {
-                document.documentElement.setAttribute('data-bs-theme', theme);
-            }
+        const applyTheme = (theme) => {
+            const isAuto = theme === 'auto';
+            const effectiveTheme = isAuto 
+                ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+                : theme;
+                
+            document.documentElement.setAttribute('data-bs-theme', effectiveTheme);
             localStorage.setItem('theme', theme);
-            updateThemeUI(theme);
-        }
-        
-        // Update UI radios
-        function updateThemeUI(theme) {
-            document.querySelectorAll('.theme-radio').forEach(radio => {
-                radio.classList.remove('active');
-            });
             
-            const themeMap = {
-                'light': 0,
-                'dark': 1,
-                'auto': 2
-            };
-            
-            const index = themeMap[theme];
-            if (index !== undefined) {
-                const radios = document.querySelectorAll('.theme-radio');
-                if (radios[index]) radios[index].classList.add('active');
-            }
-        }
-        
-        // Theme option click handlers
-        document.querySelectorAll('.theme-option').forEach((item, index) => {
-            item.addEventListener('click', function() {
-                const theme = this.getAttribute('data-theme');
-                applyTheme(theme);
+            // Update UI
+            document.querySelectorAll('.theme-option').forEach(el => {
+                el.classList.toggle('active', el.dataset.theme === theme);
             });
+        };
+
+        document.querySelectorAll('.theme-option').forEach(el => {
+            el.addEventListener('click', () => applyTheme(el.dataset.theme));
         });
-        
-        // Initial theme application
-        applyTheme(savedTheme);
-        
-        // Listen for system theme changes when in auto mode
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-            if (localStorage.getItem('theme') === 'auto') {
-                document.documentElement.setAttribute('data-bs-theme', e.matches ? 'dark' : 'light');
-            }
-        });
+
+        // Initial apply
+        applyTheme(localStorage.getItem('theme') || 'dark');
     })();
 
     // Preferences Checkbox Logic
     (function() {
-        // Load saved preferences
-        function updateCheckboxUI(prefId, isChecked) {
-            const item = document.querySelector(`[data-pref="${prefId}"]`);
-            if (item) {
-                const checkbox = item.querySelector('.pref-checkbox');
-                if (checkbox) {
-                    if (isChecked) {
-                        checkbox.classList.add('checked');
-                    } else {
-                        checkbox.classList.remove('checked');
-                    }
-                }
-        }
-    }
-    
-    function togglePreference(prefId) {
-        const currentValue = localStorage.getItem('pref_' + prefId) === 'true';
-        const newValue = !currentValue;
-        localStorage.setItem('pref_' + prefId, newValue);
-        updateCheckboxUI(prefId, newValue);
-        
-        // Show toast or feedback (optional)
-        const prefNames = {
-            audio: 'Audio',
-            resend: 'Resend prompt',
-            refund: 'Refund prompt'
+        const updateUI = (prefId) => {
+            const isChecked = localStorage.getItem('pref_' + prefId) === 'true';
+            const el = document.querySelector(`[data-pref="${prefId}"]`);
+            if (el) el.classList.toggle('checked', isChecked);
         };
-        console.log(`${prefNames[prefId]} ${newValue ? 'disabled' : 'enabled'}`);
-    }
-    
-    // Initialize checkboxes
-    ['audio', 'resend', 'refund'].forEach(prefId => {
-        const savedValue = localStorage.getItem('pref_' + prefId) === 'true';
-        updateCheckboxUI(prefId, savedValue);
-        
-        const option = document.querySelector(`[data-pref="${prefId}"]`);
-        if (option) {
-            option.addEventListener('click', function(e) {
+
+        document.querySelectorAll('.pref-toggle').forEach(el => {
+            const prefId = el.dataset.pref;
+            updateUI(prefId);
+            el.addEventListener('click', (e) => {
                 e.preventDefault();
-                togglePreference(prefId);
+                const current = localStorage.getItem('pref_' + prefId) === 'true';
+                localStorage.setItem('pref_' + prefId, !current);
+                updateUI(prefId);
             });
-        }
-    });
-})();
-
-// Notification Logic
-$(document).ready(function() {
-    const apikey = "tTWeml7xofI7o6kdJUBVnFeKsvVbWvYd"; // Should come from config
-    const endpoint_url = "https://api.smspool.net";
-    
-    let notificationsList = [];
-
-    function formatTimestamp(timestamp) {
-        if (!timestamp) return 'Just now';
-        try {
-            const date = new Date(timestamp);
-            const now = new Date();
-            const diff = Math.floor((now - date) / 1000);
-            
-            if (diff < 60) return 'Just now';
-            if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
-            if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
-            return date.toLocaleDateString();
-        } catch(e) {
-            return 'Just now';
-        }
-    }
-    
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-    
-    function renderNotifications() {
-        const $container = $("#active_notifications_list");
-        $container.empty();
-        
-        if (notificationsList.length > 0) {
-            const unreadCount = notificationsList.filter(n => !n.read).length;
-            if (unreadCount > 0) {
-                const badge = $('#notification_badge');
-                if (badge.length) {
-                    badge.text(unreadCount).show();
-                }
-            }
-            
-            notificationsList.forEach(notification => {
-                const notificationHtml = `
-                    <div class="notification-item" id="notif-${notification.id}">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
-                            <div class="fw-semibold small">${escapeHtml(notification.title)}</div>
-                            <div class="text-secondary small" style="font-size: 10px;">${formatTimestamp(notification.timestamp)}</div>
-                        </div>
-                        <div class="small text-secondary mb-2">${escapeHtml(notification.text)}</div>
-                        ${!notification.read ? `<a href="#" class="text-primary text-decoration-none small" onclick="markAsRead('${notification.id}'); return false;">Mark as read</a>` : ''}
-                    </div>
-                `;
-                $container.append(notificationHtml);
-            });
-        } else {
-            const badge = $('#notification_badge');
-            if (badge.length) badge.hide();
-            
-            $container.html(`
-                <div class="text-center py-5">
-                    <i class="bi bi-bell-slash fs-1 d-block mb-2 text-secondary opacity-50"></i>
-                    <div class="text-secondary small">You have no new notifications.</div>
-                </div>
-            `);
-        }
-    }
-    
-    function checkNotifications() {
-        if (!apikey || apikey === "tTWeml7xofI7o6kdJUBVnFeKsvVbWvYd") return;
-        
-        $.ajax({
-            url: endpoint_url + "/notifications/retrieve",
-            type: "POST",
-            data: { key: apikey },
-            success: function(data) {
-                if (data && Array.isArray(data)) {
-                    notificationsList = data.map(notif => ({
-                        id: notif.notification_id,
-                        title: notif.title || 'Notification',
-                        text: notif.text || '',
-                        timestamp: notif.timestamp,
-                        read: false
-                    }));
-                    renderNotifications();
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Failed to fetch notifications:', error);
-            }
         });
-    }
+    })();
     
-    // Expose functions globally
-    window.markAsRead = function(id) {
-        const notification = notificationsList.find(n => n.id == id);
-        if (notification) {
-            notification.read = true;
-            renderNotifications();
-            
-            // API call to mark as read would go here
-            if (apikey && apikey !== "tTWeml7xofI7o6kdJUBVnFeKsvVbWvYd") {
-                $.ajax({
-                    url: endpoint_url + "/notifications/mark-read",
-                    type: "POST",
-                    data: { key: apikey, notification_id: id },
-                    error: function() {
-                        console.error('Failed to mark notification as read');
-                    }
-                });
-            }
-        }
-    };
-    
+    // Notification Logic (Mock for now, matching UI)
     window.markAllAsRead = function() {
-        notificationsList.forEach(n => n.read = true);
-        renderNotifications();
-        
-        // API call to mark all as read would go here
-        if (apikey && apikey !== "tTWeml7xofI7o6kdJUBVnFeKsvVbWvYd" && notificationsList.length > 0) {
-            $.ajax({
-                url: endpoint_url + "/notifications/mark-all-read",
-                type: "POST",
-                data: { key: apikey },
-                error: function() {
-                    console.error('Failed to mark all notifications as read');
-                }
-            });
-        }
+        $("#active_notifications_list").html(`
+            <div class="notif-empty">
+                <div class="notif-empty-icon"><i class="ph ph-bell-slash"></i></div>
+                <div class="text-secondary small">You have no new notifications.</div>
+            </div>
+        `);
+        showToast('success', 'All notifications marked as read');
     };
-    
-    // Initial load
-    checkNotifications();
-    if (apikey && apikey !== "tTWeml7xofI7o6kdJUBVnFeKsvVbWvYd") {
-        setInterval(checkNotifications, 30000);
-    }
-});
 </script>
 
-<!-- Logout Form (if not already present elsewhere) -->
+<!-- Logout Form -->
 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
     @csrf
 </form>

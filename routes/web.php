@@ -51,6 +51,9 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/', function () { return view('support.index'); })->name('support.index');
     });
 
+    // Impersonation
+    Route::get('/impersonate/stop', [App\Http\Controllers\ImpersonationController::class, 'stop'])->name('impersonate.stop');
+
     // Referral Routes
     Route::prefix('referrals')->group(function () {
         Route::get('/', function () { return view('referrals.index'); })->name('referrals.index');
@@ -72,6 +75,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('users/{user}', [App\Http\Controllers\Admin\UserController::class, 'show'])->name('users.show');
         Route::post('users/{user}/adjust-wallet', [App\Http\Controllers\Admin\UserController::class, 'adjustWallet'])->name('users.adjust-wallet');
         Route::post('users/{user}/toggle-ban', [App\Http\Controllers\Admin\UserController::class, 'toggleBan'])->name('users.toggle-ban');
+        Route::get('/users/{user}/impersonate', [App\Http\Controllers\ImpersonationController::class, 'start'])->name('users.impersonate');
         Route::post('users/{user}/assign-role', [App\Http\Controllers\Admin\UserController::class, 'assignRole'])->name('users.assign-role');
         Route::post('users/{user}/remove-role', [App\Http\Controllers\Admin\UserController::class, 'removeRole'])->name('users.remove-role');
         Route::post('users/{user}/toggle-2fa', [App\Http\Controllers\Admin\UserController::class, 'toggle2FA'])->name('users.toggle-2fa');

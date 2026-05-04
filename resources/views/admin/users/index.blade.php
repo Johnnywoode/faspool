@@ -7,6 +7,12 @@
     <div class="col-12">
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1">
+                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Users</li>
+                    </ol>
+                </nav>
                 <h2 class="fw-bold h3 mb-1">User Management</h2>
                 <p class="text-muted small">Manage system users, roles, and permissions across all tenants.</p>
             </div>

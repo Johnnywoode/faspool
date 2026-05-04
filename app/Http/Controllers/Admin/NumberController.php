@@ -8,65 +8,40 @@ use Illuminate\Http\Request;
 
 class NumberController extends Controller
 {
+    /**
+     * Display a listing of all active numbers (orders).
+     */
     public function index()
     {
-        $numbers = Order::with(['user', 'service', 'country', 'provider'])
-            ->whereNotNull('number')
-            ->latest()
+        $orders = Order::where('status', 'active')
+            ->with(['user', 'service', 'country', 'tenant'])
             ->paginate(20);
-
-        return view('admin.numbers.index', compact('numbers'));
+            
+        return view('admin.numbers.index', compact('orders'));
     }
 
-    public function show($number)
+    /**
+     * Manually release a number.
+     */
+    public function release(Order $order)
     {
-        $order = Order::with(['user', 'service', 'country', 'provider'])
-            ->where('number', $number)
-            ->orWhere('id', $number)
-            ->firstOrFail();
-
-        return view('admin.numbers.show', compact('order'));
-    }
-
-    public function release($number)
-    {
-        $order = Order::where('number', $number)
-            ->orWhere('id', $number)
-            ->firstOrFail();
-
-        // TODO: release number via provider adapter
-        $order->update(['status' => 'cancelled']);
-
+        $order->update(['status' => 'completed']);
+        // Trigger provider release if necessary
+        
         return back()->with('success', 'Number released successfully.');
     }
 
-    public function extend(Request $request, $number)
+    /**
+     * Extend the duration of a rental.
+     */
+    public function extend(Request $request, Order $order)
     {
-        $request->validate([
-            'minutes' => 'required|integer|min:5|max:1440',
-        ]);
-
-        $order = Order::where('number', $number)
-            ->orWhere('id', $number)
-            ->firstOrFail();
-
-        if ($order->expires_at) {
-            $order->update([
-                'expires_at' => $order->expires_at->addMinutes($request->minutes),
-            ]);
-        }
-
-        return back()->with('success', 'Number expiry extended.');
-    }
-
-    public function inventory()
-    {
-        $inventory = Order::with(['service', 'country', 'provider'])
-            ->where('status', 'waiting_sms')
-            ->whereNotNull('number')
-            ->latest()
-            ->paginate(50);
-
-        return view('admin.numbers.inventory', compact('inventory'));
+        $request->validate(['minutes' => 'required|integer|min:1']);
+        
+        // Update expiration logic
+        $order->expires_at = $order->expires_at->addMinutes($request->minutes);
+        $order->save();
+        
+        return back()->with('success', 'Rental duration extended.');
     }
 }

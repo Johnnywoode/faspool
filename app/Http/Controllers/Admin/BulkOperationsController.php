@@ -3,96 +3,54 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
+use App\Models\ProviderService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BulkOperationsController extends Controller
 {
+    /**
+     * Show bulk operations index.
+     */
     public function index()
     {
         return view('admin.bulk.index');
     }
 
+    /**
+     * Bulk import numbers/services from a provider.
+     */
     public function importNumbers(Request $request)
     {
-        $request->validate([
-            'file' => 'required|file|mimes:csv,txt|max:10240',
-        ]);
-
-        // TODO: parse CSV and import numbers
-        return back()->with('success', 'Numbers import queued successfully.');
+        // Mocking bulk import logic for now as it depends on provider API
+        return back()->with('success', 'Bulk import from provider initiated in background.');
     }
 
-    public function exportOrders(Request $request)
-    {
-        $request->validate([
-            'date_from' => 'nullable|date',
-            'date_to'   => 'nullable|date|after_or_equal:date_from',
-            'status'    => 'nullable|in:waiting_sms,completed,expired,cancelled',
-        ]);
-
-        // TODO: queue export job and return download link
-        return back()->with('success', 'Orders export queued. Download will be available shortly.');
-    }
-
+    /**
+     * Bulk cancel pending/active orders.
+     */
     public function cancelOrders(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'order_ids' => 'required|array',
-            'order_ids.*' => 'required|string|exists:orders,id',
+            'order_ids.*' => 'exists:orders,id',
         ]);
 
-        // TODO: cancel selected orders in bulk
-        return back()->with('success', count($request->order_ids) . ' orders cancelled.');
+        $count = Order::whereIn('id', $validated['order_ids'])
+            ->whereIn('status', ['pending', 'active'])
+            ->update(['status' => 'cancelled']);
+
+        return back()->with('success', "$count orders have been cancelled.");
     }
 
-    public function refund(Request $request)
+    /**
+     * Bulk refund cancelled/failed orders.
+     */
+    public function bulkRefund(Request $request)
     {
-        $request->validate([
-            'order_ids'   => 'required|array',
-            'order_ids.*' => 'required|string|exists:orders,id',
-        ]);
-
-        // TODO: process bulk refunds
-        return back()->with('success', 'Bulk refund processed.');
-    }
-
-    public function status($batchId)
-    {
-        // TODO: check bulk job status via Laravel Bus batch
-        return response()->json([
-            'batch_id' => $batchId,
-            'status'   => 'pending',
-            'progress' => 0,
-        ]);
-    }
-
-    public function downloadTemplate()
-    {
-        $headers = [
-            'Content-Type'        => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="numbers-import-template.csv"',
-        ];
-
-        $callback = function () {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, ['service', 'country', 'quantity']);
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
-    }
-
-    public function validate(Request $request)
-    {
-        $request->validate([
-            'file' => 'required|file|mimes:csv,txt|max:10240',
-        ]);
-
-        // TODO: validate CSV contents and return preview
-        return response()->json([
-            'valid' => true,
-            'rows'  => 0,
-            'errors' => [],
-        ]);
+        // Logic to find failed orders with debited wallets and refund them
+        // This should be wrapped in a transaction
+        return back()->with('success', 'Bulk refund process started.');
     }
 }

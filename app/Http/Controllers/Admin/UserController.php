@@ -186,8 +186,19 @@ class UserController extends Controller
 
         $user->update(['is_banned' => !$user->is_banned]);
 
-        $status = $user->is_banned ? 'banned' : 'unbanned';
-        return back()->with('success', "User {$status} successfully.");
+        $statusLabel = $user->is_banned ? 'suspended' : 'activated';
+        $message = "User account has been {$statusLabel} successfully.";
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'is_banned' => $user->is_banned
+            ]);
+        }
+
+        return back()->with('status', 'success')
+            ->with('message', $message);
     }
 
     /**

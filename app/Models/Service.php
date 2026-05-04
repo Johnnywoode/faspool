@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Core\Traits\HasUid;
 use Illuminate\Database\Eloquent\Model;
 
 class Service extends Model
 {
-    protected $fillable = ['name', 'slug', 'status'];
+    use HasUid;
+    
+    protected $fillable = ['name', 'category', 'icon', 'status'];
 }

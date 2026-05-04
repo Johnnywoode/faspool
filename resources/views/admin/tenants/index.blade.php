@@ -33,8 +33,15 @@
                             @forelse($tenants ?? \App\Models\Tenant::all() as $tenant)
                                 <tr>
                                     <td class="px-4 py-3">
-                                        <div class="fw-bold text-white">{{ $tenant->name }}</div>
-                                        <div class="text-muted small">{{ $tenant->id }}</div>
+                                        <a href="{{ route('admin.tenants.show', $tenant) }}" class="text-decoration-none d-flex align-items-center">
+                                            <div class="avatar avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                <i class="bi bi-building"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-white">{{ $tenant->name }}</div>
+                                                <div class="text-muted small">{{ $tenant->uid }}</div>
+                                            </div>
+                                        </a>
                                     </td>
                                     <td class="py-3 text-secondary">{{ $tenant->domain ?? 'default.faspool.com' }}</td>
                                     <td class="py-3">

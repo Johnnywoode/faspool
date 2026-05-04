@@ -23,9 +23,17 @@ class AuthController extends Controller
         $credentials = $request->validated();
         // Attempt to authenticate
         if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+            $user = Auth::user();
             
-            $user = Auth::user(); // Get the authenticated user
+            // Check if user is banned
+            if ($user->is_banned) {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'Your account has been suspended. Please contact support.',
+                ])->onlyInput('email');
+            }
+
+            $request->session()->regenerate();
             
             if ($user->hasRole('admin')) {
                 return redirect()->intended(route('admin.dashboard'));

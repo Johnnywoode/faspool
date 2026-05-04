@@ -6,94 +6,89 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Response;
 
 class ReportsController extends Controller
 {
+    /**
+     * Display earnings report.
+     */
     public function earnings()
     {
         $earnings = Transaction::where('type', 'credit')
             ->where('status', 'completed')
-            ->latest()
+            ->with('wallet.tenant')
             ->paginate(20);
-
+            
         return view('admin.reports.earnings', compact('earnings'));
     }
 
+    /**
+     * Display usage report.
+     */
     public function usage()
     {
-        $usage = Order::with(['user', 'service', 'country'])
-            ->latest()
+        $orders = Order::with(['user', 'service', 'country', 'tenant'])
             ->paginate(20);
-
-        return view('admin.reports.usage', compact('usage'));
+            
+        return view('admin.reports.usage', compact('orders'));
     }
 
-    public function numberPerformance()
-    {
-        return view('admin.reports.number-performance');
-    }
-
-    public function orderAnalytics()
-    {
-        $analytics = [
-            'total'     => Order::count(),
-            'completed' => Order::where('status', 'completed')->count(),
-            'expired'   => Order::where('status', 'expired')->count(),
-            'waiting'   => Order::where('status', 'waiting_sms')->count(),
-        ];
-
-        return view('admin.reports.order-analytics', compact('analytics'));
-    }
-
-    public function export()
-    {
-        return view('admin.reports.export');
-    }
-
+    /**
+     * Export data to CSV.
+     */
     public function generateExport(Request $request)
     {
-        $request->validate([
-            'type'       => 'required|in:orders,transactions,users',
-            'date_from'  => 'nullable|date',
-            'date_to'    => 'nullable|date|after_or_equal:date_from',
-        ]);
+        $type = $request->input('type', 'orders');
+        $filename = "report_{$type}_" . now()->format('YmdHis') . ".csv";
+        
+        $headers = [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
 
-        // TODO: generate and store CSV export file
-        return back()->with('success', 'Export is being generated. You will be notified when ready.');
-    }
+        $callback = function() use ($type) {
+            $file = fopen('php://output', 'w');
+            
+            if ($type === 'orders') {
+                fputcsv($file, ['ID', 'User', 'Tenant', 'Service', 'Country', 'Cost', 'Price', 'Status', 'Created At']);
+                Order::with(['user', 'tenant', 'service', 'country'])->chunk(100, function($orders) use ($file) {
+                    foreach ($orders as $order) {
+                        fputcsv($file, [
+                            $order->uid,
+                            $order->user->name ?? 'N/A',
+                            $order->tenant->name ?? 'N/A',
+                            $order->service->name ?? 'N/A',
+                            $order->country->name ?? 'N/A',
+                            $order->cost,
+                            $order->price,
+                            $order->status,
+                            $order->created_at
+                        ]);
+                    }
+                });
+            } else {
+                fputcsv($file, ['ID', 'Tenant', 'Amount', 'Type', 'Status', 'Created At']);
+                Transaction::with('wallet.tenant')->chunk(100, function($transactions) use ($file) {
+                    foreach ($transactions as $tx) {
+                        fputcsv($file, [
+                            $tx->id,
+                            $tx->wallet->tenant->name ?? 'N/A',
+                            $tx->amount,
+                            $tx->type,
+                            $tx->status,
+                            $tx->created_at
+                        ]);
+                    }
+                });
+            }
+            
+            fclose($file);
+        };
 
-    public function schedule()
-    {
-        return view('admin.reports.schedule');
-    }
-
-    public function storeSchedule(Request $request)
-    {
-        $request->validate([
-            'report_type' => 'required|string',
-            'frequency'   => 'required|in:daily,weekly,monthly',
-            'email'       => 'required|email',
-        ]);
-
-        // TODO: store scheduled report configuration
-        return back()->with('success', 'Report schedule saved.');
-    }
-
-    public function deleteSchedule($schedule)
-    {
-        // TODO: delete scheduled report
-        return back()->with('success', 'Report schedule deleted.');
-    }
-
-    public function download($file)
-    {
-        $path = storage_path('app/reports/' . $file);
-
-        if (!file_exists($path)) {
-            abort(404, 'Report file not found.');
-        }
-
-        return response()->download($path);
+        return Response::stream($callback, 200, $headers);
     }
 }

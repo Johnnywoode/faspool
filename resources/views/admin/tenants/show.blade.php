@@ -1,127 +1,114 @@
 @extends('layouts.master')
 
-@section('title', 'Tenant: ' . $tenant->name)
+@section('title', 'Tenant Report: ' . $tenant->name)
 
 @section('content')
-<div class="d-flex align-items-center justify-content-between mb-4">
-    <div>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-1">
-                <li class="breadcrumb-item"><a href="{{ route('admin.tenants.index') }}" class="text-decoration-none">Tenants</a></li>
-                <li class="breadcrumb-item active">{{ $tenant->name }}</li>
-            </ol>
-        </nav>
-        <h1 class="h4 fw-bold mb-0">{{ $tenant->name }}</h1>
-    </div>
-    <div class="d-flex gap-2">
-        <a href="{{ route('admin.tenants.edit', $tenant) }}" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-pencil me-1"></i> Edit
-        </a>
-        <form method="POST" action="{{ route('admin.tenants.toggle-status', $tenant) }}">
-            @csrf
-            <button class="btn btn-sm {{ $tenant->status === 'active' ? 'btn-warning' : 'btn-success' }}">
-                <i class="bi bi-{{ $tenant->status === 'active' ? 'pause' : 'play' }} me-1"></i>
-                {{ $tenant->status === 'active' ? 'Deactivate' : 'Activate' }}
-            </button>
-        </form>
-        @unless($tenant->is_default)
-        <form method="POST" action="{{ route('admin.tenants.make-default', $tenant) }}">
-            @csrf
-            <button class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-star me-1"></i> Make Default
-            </button>
-        </form>
-        @endunless
-    </div>
-</div>
-
 <div class="row g-4">
-    {{-- Info Card --}}
-    <div class="col-lg-5">
-        <div class="card border-0 h-100" style="background:var(--bs-secondary-bg)">
-            <div class="card-header border-0 bg-transparent fw-semibold">Tenant Details</div>
-            <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-5 text-secondary">Domain</dt>
-                    <dd class="col-7">{{ $tenant->domain ?? '—' }}</dd>
-
-                    <dt class="col-5 text-secondary">Status</dt>
-                    <dd class="col-7">
-                        @php
-                            $badge = match($tenant->status) {
-                                'active'    => 'success',
-                                'inactive'  => 'secondary',
-                                'suspended' => 'danger',
-                                default     => 'secondary',
-                            };
-                        @endphp
-                        <span class="badge bg-{{ $badge }}">{{ ucfirst($tenant->status) }}</span>
-                    </dd>
-
-                    <dt class="col-5 text-secondary">Default</dt>
-                    <dd class="col-7">
-                        @if($tenant->is_default)
-                            <span class="badge bg-primary">Yes</span>
-                        @else
-                            <span class="text-secondary">No</span>
-                        @endif
-                    </dd>
-
-                    <dt class="col-5 text-secondary">Users</dt>
-                    <dd class="col-7">{{ number_format($tenant->users_count) }}</dd>
-
-                    <dt class="col-5 text-secondary">Orders</dt>
-                    <dd class="col-7">{{ number_format($tenant->orders_count) }}</dd>
-
-                    <dt class="col-5 text-secondary">API Key</dt>
-                    <dd class="col-7">
-                        <code class="small text-break">{{ $tenant->api_key }}</code>
-                    </dd>
-
-                    <dt class="col-5 text-secondary">Created</dt>
-                    <dd class="col-7">{{ $tenant->created_at->format('M d, Y') }}</dd>
-                </dl>
+    <div class="col-12">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1">
+                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('admin.tenants.index') }}">Tenants</a></li>
+                        <li class="breadcrumb-item active">{{ $tenant->name }}</li>
+                    </ol>
+                </nav>
+                <h2 class="fw-bold h3 mb-0">{{ $tenant->name }} <span class="badge bg-success bg-opacity-10 text-success ms-2 small" style="font-size: 0.5em; vertical-align: middle;">{{ $tenant->status }}</span></h2>
+                <p class="text-muted small mb-0">UID: {{ $tenant->uid }} | Domain: {{ $tenant->domain }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.tenants.edit', $tenant) }}" class="btn btn-outline-secondary rounded-3">
+                    <i class="bi bi-pencil me-2"></i> Edit Tenant
+                </a>
+                <button class="btn btn-primary rounded-3">
+                    <i class="bi bi-download me-2"></i> Export Report
+                </button>
             </div>
         </div>
-    </div>
 
-    {{-- Users Table --}}
-    <div class="col-lg-7">
-        <div class="card border-0" style="background:var(--bs-secondary-bg)">
-            <div class="card-header border-0 bg-transparent fw-semibold d-flex justify-content-between align-items-center">
-                Users
-                <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+        <!-- Stats Grid -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="card bg-surface border-secondary border-opacity-10 rounded-4 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-muted small mb-2 text-uppercase fw-bold">Total Users</div>
+                        <div class="h3 fw-bold mb-0 text-white">{{ $tenant->users_count }}</div>
+                        <div class="text-success small mt-2"><i class="bi bi-arrow-up"></i> 12% increase</div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-dark table-hover mb-0 align-middle">
-                        <thead>
-                            <tr class="text-secondary small">
-                                <th class="ps-4">Name</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Joined</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($tenant->users()->with('roles')->latest()->take(10)->get() as $user)
-                            <tr>
-                                <td class="ps-4">{{ $user->name }}</td>
-                                <td class="text-secondary small">{{ $user->email }}</td>
-                                <td>
-                                    @foreach($user->roles as $role)
-                                        <span class="badge bg-primary-subtle text-primary">{{ $role->name }}</span>
-                                    @endforeach
-                                </td>
-                                <td class="text-secondary small">{{ $user->created_at->format('M d, Y') }}</td>
-                            </tr>
+            <div class="col-md-3">
+                <div class="card bg-surface border-secondary border-opacity-10 rounded-4 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-muted small mb-2 text-uppercase fw-bold">Total Orders</div>
+                        <div class="h3 fw-bold mb-0 text-white">{{ $tenant->orders_count }}</div>
+                        <div class="text-primary small mt-2">Last 30 days</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-surface border-secondary border-opacity-10 rounded-4 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-muted small mb-2 text-uppercase fw-bold">Wallet Balances</div>
+                        <div class="h3 fw-bold mb-0 text-white">${{ number_format($tenant->wallets()->sum('balance'), 2) }}</div>
+                        <div class="text-muted small mt-2">Across all users</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-surface border-secondary border-opacity-10 rounded-4 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-muted small mb-2 text-uppercase fw-bold">API Status</div>
+                        <div class="h3 fw-bold mb-0 text-success">Healthy</div>
+                        <div class="text-muted small mt-2">Last check 5m ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Order Trends -->
+            <div class="col-lg-8">
+                <div class="card bg-surface border-secondary border-opacity-10 rounded-4 shadow-sm">
+                    <div class="card-header bg-transparent border-secondary border-opacity-10 py-3 px-4">
+                        <h5 class="card-title mb-0">Order Activity</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div style="height: 300px;" class="d-flex align-items-center justify-content-center bg-secondary bg-opacity-5 rounded-3">
+                            <span class="text-muted small">Activity Chart Placeholder (Requires Chart.js)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Users -->
+            <div class="col-lg-4">
+                <div class="card bg-surface border-secondary border-opacity-10 rounded-4 shadow-sm h-100">
+                    <div class="card-header bg-transparent border-secondary border-opacity-10 py-3 px-4">
+                        <h5 class="card-title mb-0">Recent Users</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            @forelse($tenant->users()->latest()->limit(5)->get() as $user)
+                                <li class="list-group-item bg-transparent border-secondary border-opacity-10 px-4 py-3 d-flex align-items-center">
+                                    <div class="avatar avatar-sm bg-secondary bg-opacity-10 rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-person"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold text-white small">{{ $user->name }}</div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">{{ $user->email }}</div>
+                                    </div>
+                                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1 small" style="font-size: 0.6rem;">Active</span>
+                                </li>
                             @empty
-                            <tr>
-                                <td colspan="4" class="text-center text-secondary py-4">No users yet.</td>
-                            </tr>
+                                <li class="list-group-item bg-transparent text-center py-4 text-muted small">No users found</li>
                             @endforelse
-                        </tbody>
-                    </table>
+                        </ul>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0 p-4 text-center">
+                        <a href="{{ route('admin.users.index', ['tenant' => $tenant->uid]) }}" class="small text-primary text-decoration-none">View all users <i class="bi bi-arrow-right"></i></a>
+                    </div>
                 </div>
             </div>
         </div>

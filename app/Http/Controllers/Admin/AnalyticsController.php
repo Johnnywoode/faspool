@@ -6,70 +6,62 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AnalyticsController extends Controller
 {
+    /**
+     * Dashboard analytics summary.
+     */
     public function index()
     {
-        return $this->dashboard();
-    }
-
-    public function dashboard()
-    {
         $stats = [
-            'total_orders'    => Order::count(),
-            'total_users'     => User::count(),
-            'total_revenue'   => Transaction::where('type', 'credit')
-                                    ->where('status', 'completed')
-                                    ->sum('amount'),
-            'pending_orders'  => Order::where('status', 'waiting_sms')->count(),
+            'total_revenue' => Transaction::where('type', 'credit')->where('status', 'completed')->sum('amount'),
+            'total_orders' => Order::count(),
+            'total_users' => User::count(),
+            'total_tenants' => Tenant::count(),
         ];
 
-        return view('admin.analytics.index', compact('stats'));
+        $revenueData = Transaction::where('type', 'credit')
+            ->where('status', 'completed')
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(amount) as total'))
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->limit(30)
+            ->get();
+
+        return view('admin.analytics.index', compact('stats', 'revenueData'));
     }
 
+    /**
+     * Revenue specific analytics.
+     */
     public function revenue()
     {
-        $revenueByDay = Transaction::where('type', 'credit')
+        $revenueByTenant = Transaction::where('type', 'credit')
             ->where('status', 'completed')
-            ->selectRaw('DATE(created_at) as date, SUM(amount) as total')
-            ->groupBy('date')
-            ->orderBy('date', 'desc')
-            ->take(30)
+            ->select('tenants.name', DB::raw('SUM(transactions.amount) as total'))
+            ->join('wallets', 'transactions.wallet_id', '=', 'wallets.id')
+            ->join('tenants', 'wallets.tenant_id', '=', 'tenants.id')
+            ->groupBy('tenants.name')
             ->get();
 
-        return view('admin.analytics.revenue', compact('revenueByDay'));
+        return view('admin.analytics.revenue', compact('revenueByTenant'));
     }
 
+    /**
+     * Usage and order volume analytics.
+     */
     public function usage()
     {
-        $usageByDay = Order::selectRaw('DATE(created_at) as date, COUNT(*) as total')
+        $orderVolume = Order::select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
             ->groupBy('date')
             ->orderBy('date', 'desc')
-            ->take(30)
+            ->limit(30)
             ->get();
 
-        return view('admin.analytics.usage', compact('usageByDay'));
-    }
-
-    public function numbers()
-    {
-        return view('admin.analytics.numbers');
-    }
-
-    public function orders()
-    {
-        $orders = Order::with(['user', 'service', 'country', 'provider'])
-            ->latest()
-            ->paginate(20);
-
-        return view('admin.analytics.orders', compact('orders'));
-    }
-
-    public function realTime()
-    {
-        return view('admin.analytics.real-time');
+        return view('admin.analytics.usage', compact('orderVolume'));
     }
 }

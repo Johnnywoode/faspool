@@ -3,67 +3,81 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\SystemSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Log;
 
 class SettingsController extends Controller
 {
+    /**
+     * Show the settings index page.
+     */
     public function index()
     {
-        return view('admin.settings.index');
+        $settings = SystemSetting::all()->groupBy('group');
+        return view('admin.settings.index', compact('settings'));
     }
 
+    /**
+     * Update general system settings.
+     */
     public function updateGeneral(Request $request)
     {
-        $request->validate([
-            'app_name'     => 'nullable|string|max:255',
-            'app_url'      => 'nullable|url|max:255',
-            'default_currency' => 'nullable|string|size:3',
+        $validated = $request->validate([
+            'site_name' => 'nullable|string|max:255',
+            'site_description' => 'nullable|string',
+            'contact_email' => 'nullable|email',
+            'impersonation_enabled' => 'nullable|boolean',
         ]);
 
-        // TODO: persist to config/settings table or .env
+        foreach ($validated as $key => $value) {
+            $type = is_bool($value) ? 'boolean' : 'string';
+            SystemSetting::set($key, $value, 'general', $type);
+        }
+
         return back()->with('success', 'General settings updated.');
     }
 
+    /**
+     * Update payment gateway settings.
+     */
     public function updatePayment(Request $request)
     {
-        $request->validate([
-            'paystack_public_key'  => 'nullable|string',
-            'paystack_secret_key'  => 'nullable|string',
+        $validated = $request->validate([
+            'payment_markup' => 'nullable|numeric|min:0',
+            'min_deposit' => 'nullable|numeric|min:1',
+            'max_deposit' => 'nullable|numeric|min:1',
         ]);
 
-        // TODO: persist payment gateway credentials
+        foreach ($validated as $key => $value) {
+            SystemSetting::set($key, $value, 'payment', 'float');
+        }
+
         return back()->with('success', 'Payment settings updated.');
     }
 
+    /**
+     * Update notification settings.
+     */
     public function updateNotification(Request $request)
     {
-        // TODO: persist notification settings
+        $validated = $request->validate([
+            'notify_on_new_user' => 'nullable|boolean',
+            'notify_on_large_deposit' => 'nullable|boolean',
+            'large_deposit_threshold' => 'nullable|numeric|min:0',
+        ]);
+
+        foreach ($validated as $key => $value) {
+            $type = is_bool($value) ? 'boolean' : 'float';
+            SystemSetting::set($key, $value, 'notification', $type);
+        }
+
         return back()->with('success', 'Notification settings updated.');
     }
 
-    public function updateSecurity(Request $request)
-    {
-        // TODO: persist security settings
-        return back()->with('success', 'Security settings updated.');
-    }
-
-    public function updateEmail(Request $request)
-    {
-        $request->validate([
-            'mail_host'       => 'nullable|string|max:255',
-            'mail_port'       => 'nullable|integer',
-            'mail_username'   => 'nullable|string|max:255',
-            'mail_password'   => 'nullable|string',
-            'mail_from_address' => 'nullable|email|max:255',
-            'mail_from_name'  => 'nullable|string|max:255',
-        ]);
-
-        // TODO: persist email settings
-        return back()->with('success', 'Email settings updated.');
-    }
-
+    /**
+     * Clear various application caches.
+     */
     public function clearCache()
     {
         Artisan::call('cache:clear');
@@ -74,38 +88,17 @@ class SettingsController extends Controller
         return back()->with('success', 'Application cache cleared successfully.');
     }
 
-    public function createBackup()
-    {
-        // TODO: implement database backup (e.g. via spatie/laravel-backup)
-        return back()->with('success', 'Backup created successfully.');
-    }
-
-    public function viewLogs()
-    {
-        $logPath = storage_path('logs/laravel.log');
-        $logs    = '';
-
-        if (file_exists($logPath)) {
-            $logs = file_get_contents($logPath);
-            // Only show last 200 lines to avoid memory issues
-            $lines = array_slice(explode("\n", $logs), -200);
-            $logs  = implode("\n", $lines);
-        }
-
-        return view('admin.settings.logs', compact('logs'));
-    }
-
+    /**
+     * Get system-wide information.
+     */
     public function systemInfo()
     {
         $info = [
-            'php_version'   => phpversion(),
+            'php_version' => phpversion(),
             'laravel_version' => app()->version(),
-            'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'N/A',
-            'db_driver'     => config('database.default'),
-            'cache_driver'  => config('cache.default'),
-            'queue_driver'  => config('queue.default'),
-            'environment'   => app()->environment(),
-            'debug_mode'    => config('app.debug') ? 'Enabled' : 'Disabled',
+            'server_info' => $_SERVER['SERVER_SOFTWARE'] ?? 'N/A',
+            'database_connection' => config('database.default'),
+            'environment' => app()->environment(),
         ];
 
         return view('admin.settings.system-info', compact('info'));

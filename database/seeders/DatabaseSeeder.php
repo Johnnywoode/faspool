@@ -33,6 +33,8 @@ class DatabaseSeeder extends Seeder
                 ]
             ); 
 
+            $admin->markEmailAsVerified();
+
             // Assign Admin Role
             $admin->assignRole('admin');
 
