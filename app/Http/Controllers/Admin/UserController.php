@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Tenant;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -17,8 +18,8 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with('roles', 'tenant')->orderBy('created_at', 'desc')->paginate(20);
-        $roles = Role::all();
+        $users   = User::with('roles', 'tenant')->orderBy('created_at', 'desc')->paginate(20);
+        $roles   = Role::all();
         $tenants = Tenant::all();
         return view('admin.users.index', compact('users', 'roles', 'tenants'));
     }
@@ -28,7 +29,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        $roles = Role::all();
+        $roles   = Role::all();
         $tenants = Tenant::all();
         return view('admin.users.create', compact('roles', 'tenants'));
     }
@@ -39,18 +40,18 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'name'      => 'required|string|max:255',
+            'email'     => 'required|string|email|max:255|unique:users',
+            'password'  => 'required|string|min:8|confirmed',
             'tenant_id' => 'required|exists:tenants,id',
-            'role' => 'required|exists:roles,name',
+            'role'      => 'required|exists:roles,name',
         ]);
 
         $user = User::create([
             'tenant_id' => $validated['tenant_id'],
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => $validated['password'], // Let 'hashed' cast handle this
+            'name'      => $validated['name'],
+            'email'     => $validated['email'],
+            'password'  => $validated['password'], // 'hashed' cast handles this
         ]);
 
         $user->assignRole($validated['role']);
@@ -64,6 +65,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
+        $user->load('roles', 'tenant', 'wallet');
         return view('admin.users.show', compact('user'));
     }
 
@@ -72,7 +74,7 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        $roles = Role::all();
+        $roles   = Role::all();
         $tenants = Tenant::all();
         return view('admin.users.edit', compact('user', 'roles', 'tenants'));
     }
@@ -83,21 +85,21 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'name'      => 'required|string|max:255',
+            'email'     => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'tenant_id' => 'required|exists:tenants,id',
-            'role' => 'required|exists:roles,name',
-            'password' => 'nullable|string|min:8|confirmed',
+            'role'      => 'required|exists:roles,name',
+            'password'  => 'nullable|string|min:8|confirmed',
         ]);
 
         $user->update([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
+            'name'      => $validated['name'],
+            'email'     => $validated['email'],
             'tenant_id' => $validated['tenant_id'],
         ]);
 
         if (!empty($validated['password'])) {
-            $user->update(['password' => $validated['password']]); // Let 'hashed' cast handle this
+            $user->update(['password' => $validated['password']]); // 'hashed' cast handles this
         }
 
         $user->syncRoles([$validated['role']]);
@@ -127,35 +129,35 @@ class UserController extends Controller
     public function adjustWallet(Request $request, User $user)
     {
         $request->validate([
-            'amount' => 'required|numeric|decimal:0,2',
-            'type' => 'required|in:credit,debit',
+            'amount'      => 'required|numeric|decimal:0,2',
+            'type'        => 'required|in:credit,debit',
             'description' => 'nullable|string|max:255',
         ]);
 
         $wallet = $user->wallet;
 
         if (!$wallet) {
-            $wallet = $user->wallet()->create();
+            $wallet = $user->wallet()->create(['tenant_id' => $user->tenant_id]);
         }
 
         $walletBalance = $wallet->balances()->first();
         if (!$walletBalance) {
             $walletBalance = $wallet->balances()->create([
-                'currency' => 'USD',
-                'balance' => 0
+                'currency' => 'GHS',
+                'balance'  => 0,
             ]);
         }
 
-        $amount = abs($request->amount);
+        $amount      = abs($request->amount);
         $description = $request->description ?: ($request->type === 'credit' ? 'Admin credit' : 'Admin debit');
 
         if ($request->type === 'credit') {
             $walletBalance->increment('balance', $amount);
             $wallet->transactions()->create([
-                'amount' => $amount,
-                'type' => 'credit',
+                'amount'      => $amount,
+                'type'        => 'credit',
                 'description' => $description,
-                'status' => 'completed'
+                'status'      => 'completed',
             ]);
         } else {
             if ($walletBalance->balance < $amount) {
@@ -163,10 +165,10 @@ class UserController extends Controller
             }
             $walletBalance->decrement('balance', $amount);
             $wallet->transactions()->create([
-                'amount' => $amount,
-                'type' => 'debit',
+                'amount'      => $amount,
+                'type'        => 'debit',
                 'description' => $description,
-                'status' => 'completed'
+                'status'      => 'completed',
             ]);
         }
 
@@ -186,5 +188,82 @@ class UserController extends Controller
 
         $status = $user->is_banned ? 'banned' : 'unbanned';
         return back()->with('success', "User {$status} successfully.");
+    }
+
+    /**
+     * Assign a role to the user.
+     */
+    public function assignRole(Request $request, User $user)
+    {
+        $request->validate([
+            'role' => 'required|string|exists:roles,name',
+        ]);
+
+        $user->assignRole($request->role);
+
+        return back()->with('success', "Role '{$request->role}' assigned to {$user->name}.");
+    }
+
+    /**
+     * Remove a role from the user.
+     */
+    public function removeRole(Request $request, User $user)
+    {
+        $request->validate([
+            'role' => 'required|string|exists:roles,name',
+        ]);
+
+        $user->removeRole($request->role);
+
+        return back()->with('success', "Role '{$request->role}' removed from {$user->name}.");
+    }
+
+    /**
+     * Toggle two-factor authentication for the user.
+     */
+    public function toggle2FA(User $user)
+    {
+        // TODO: integrate with Laravel Fortify or custom 2FA
+        $current = $user->two_factor_confirmed_at ?? null;
+
+        if ($current) {
+            $user->forceFill([
+                'two_factor_secret'       => null,
+                'two_factor_recovery_codes' => null,
+                'two_factor_confirmed_at' => null,
+            ])->save();
+
+            return back()->with('success', 'Two-factor authentication disabled for ' . $user->name . '.');
+        }
+
+        return back()->with('info', 'User must enable 2FA from their own account settings.');
+    }
+
+    /**
+     * Show permissions management page for the user.
+     */
+    public function permissions(User $user)
+    {
+        $allPermissions  = Permission::all()->groupBy(function ($p) {
+            return explode(' ', $p->name)[0] ?? 'other';
+        });
+        $userPermissions = $user->getAllPermissions()->pluck('name');
+
+        return view('admin.users.permissions', compact('user', 'allPermissions', 'userPermissions'));
+    }
+
+    /**
+     * Sync direct permissions for the user.
+     */
+    public function syncPermissions(Request $request, User $user)
+    {
+        $request->validate([
+            'permissions'   => 'nullable|array',
+            'permissions.*' => 'string|exists:permissions,name',
+        ]);
+
+        $user->syncPermissions($request->permissions ?? []);
+
+        return back()->with('success', 'Permissions updated for ' . $user->name . '.');
     }
 }

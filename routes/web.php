@@ -58,16 +58,6 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     // ADMIN ROUTES
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
-        // Route::get('dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
-        // Route::resource('tenants', App\Http\Controllers\Admin\TenantController::class)->except(['show', 'destroy']);
-        // Route::resource('users', App\Http\Controllers\Admin\UserController::class);
-        // Route::get('/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'show'])->name('users.show');
-        // Route::post('/users/{user}/adjust-wallet', [App\Http\Controllers\Admin\UserController::class, 'adjustWallet'])->name('users.adjust-wallet');
-        // Route::post('/users/{user}/toggle-ban', [App\Http\Controllers\Admin\UserController::class, 'toggleBan'])->name('users.toggle-ban');
-        // Route::resource('providers', App\Http\Controllers\Admin\ProviderController::class)->except(['show']);
-        // Route::post('/providers/{provider}/toggle-status', [App\Http\Controllers\Admin\ProviderController::class, 'toggleStatus'])->name('providers.toggle-status');
-        // Route::get('/pricing', function () { return view('admin.pricing.index'); })->name('pricing.index');
-
         // Dashboard
         Route::get('dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
         

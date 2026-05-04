@@ -6,6 +6,25 @@ use Illuminate\Database\Eloquent\Model;
 
 class Provider extends Model
 {
-    protected $fillable = ['name', 'adapter', 'config', 'is_active'];
-    protected $casts = ['config' => 'json', 'is_active' => 'boolean'];
+    protected $fillable = [
+        'name',
+        'slug',
+        'adapter',
+        'config',
+        'status',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'config'    => 'array',
+        'is_active' => 'boolean',
+    ];
+
+    /**
+     * Orders placed through this provider.
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }

@@ -6,6 +6,7 @@ use App\Models\Transaction;
 use App\Models\WalletBalance;
 use App\Modules\Payment\PaymentManager;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class WalletController extends Controller
 {
@@ -21,13 +22,19 @@ class WalletController extends Controller
      */
     public function deposit()
     {
-        $transactions = auth()->user()->wallet->transactions()->latest()->take(10)->get() ?? collect();
+        $user         = auth()->user();
+        $wallet       = $user->wallet;
+        $transactions = $wallet
+            ? $wallet->transactions()->latest()->take(10)->get()
+            : collect();
+
         $gateways = \App\Models\PaymentGateway::where('is_active', true)->get();
+
         return view('wallet.deposit', compact('transactions', 'gateways'));
     }
 
     /**
-     * Initialize payment.
+     * Initialize payment with the chosen gateway.
      */
     public function initializePayment(Request $request, string $gateway)
     {
@@ -39,79 +46,106 @@ class WalletController extends Controller
 
         try {
             $adapter = $this->paymentManager->driver($gateway);
-            
+
             $userMeta = [
-                'user_id' => $user->id,
-                'email' => $user->email,
+                'user_id'   => $user->id,
+                'email'     => $user->email,
                 'tenant_id' => $user->tenant_id,
             ];
 
             $result = $adapter->initialize((float) $request->amount, 'GHS', $userMeta);
 
             if ($result['success']) {
-                // Create a pending transaction
+                // Ensure the user has a wallet
+                $wallet = $user->wallet ?? $user->wallet()->create([
+                    'tenant_id' => $user->tenant_id,
+                ]);
+
+                // Create a pending transaction, storing the gateway reference in the 'reference' column
                 Transaction::create([
-                    'id' => $result['reference'],
-                    'wallet_id' => $user->wallet->id,
-                    'type' => 'credit',
-                    'amount' => $request->amount,
-                    'currency' => 'GHS',
-                    'status' => 'pending',
-                    'meta' => ['gateway' => $gateway],
+                    'wallet_id'   => $wallet->id,
+                    'type'        => 'credit',
+                    'amount'      => $request->amount,
+                    'currency'    => 'GHS',
+                    'status'      => 'pending',
+                    'reference'   => $result['reference'],
+                    'description' => 'Wallet top-up via ' . ucfirst($gateway),
+                    'meta'        => ['gateway' => $gateway],
                 ]);
 
                 return redirect($result['authorization_url']);
             }
 
-            return back()->with('status', 'error')->with('message', 'Payment initialization failed: ' . ($result['message'] ?? 'Unknown error'));
+            return back()
+                ->with('status', 'error')
+                ->with('message', 'Payment initialization failed: ' . ($result['message'] ?? 'Unknown error'));
 
         } catch (\Exception $e) {
-            return back()->with('status', 'error')->with('message', $e->getMessage());
+            return back()
+                ->with('status', 'error')
+                ->with('message', $e->getMessage());
         }
     }
 
     /**
-     * Handle payment callback.
+     * Handle payment callback from the gateway.
      */
     public function paymentCallback(Request $request, string $gateway)
     {
-        $reference = $request->reference; // Most gateways pass reference via query
+        // Most gateways pass reference as a query parameter
+        $reference = $request->reference ?? $request->trxref ?? null;
 
         if (!$reference) {
-            return redirect()->route('wallet.deposit')->with('status', 'error')->with('message', 'No payment reference supplied');
+            return redirect()->route('wallet.deposit')
+                ->with('status', 'error')
+                ->with('message', 'No payment reference supplied.');
         }
 
         try {
             $adapter = $this->paymentManager->driver($gateway);
-            $result = $adapter->verify($reference);
+            $result  = $adapter->verify($reference);
 
             if ($result['success']) {
-                $transaction = Transaction::where('id', $reference)->first();
+                // Look up transaction by the 'reference' column (not the UUID primary key)
+                $transaction = Transaction::where('reference', $reference)->first();
 
                 if ($transaction && $transaction->status === 'pending') {
-                    // Prevent double counting if the amount differs (highly unusual but safe)
-                    // For now, trust the requested amount or use the verified amount
-                    $transaction->update(['status' => 'completed']);
+                    DB::transaction(function () use ($transaction, $result) {
+                        $transaction->update(['status' => 'completed']);
 
-                    // Update wallet balance
-                    $walletBalance = WalletBalance::firstOrCreate(
-                        ['wallet_id' => $transaction->wallet_id, 'currency' => $result['currency']],
-                        ['balance' => 0]
-                    );
-                    $walletBalance->increment('balance', $transaction->amount);
+                        // Update or create the wallet balance record
+                        $walletBalance = WalletBalance::firstOrCreate(
+                            [
+                                'wallet_id' => $transaction->wallet_id,
+                                'currency'  => $result['currency'] ?? 'GHS',
+                            ],
+                            ['balance' => 0]
+                        );
 
-                    return redirect()->route('wallet.deposit')->with('status', 'success')->with('message', 'Wallet topped up successfully!');
+                        $walletBalance->increment('balance', $transaction->amount);
+                    });
+
+                    return redirect()->route('wallet.deposit')
+                        ->with('status', 'success')
+                        ->with('message', 'Wallet topped up successfully!');
                 }
-                return redirect()->route('wallet.deposit')->with('status', 'info')->with('message', 'Payment was already processed.');
+
+                return redirect()->route('wallet.deposit')
+                    ->with('status', 'info')
+                    ->with('message', 'Payment was already processed.');
             }
 
-            // Mark failed if transaction exists
-            Transaction::where('id', $reference)->update(['status' => 'failed']);
-            return redirect()->route('wallet.deposit')->with('status', 'error')->with('message', $result['message']);
+            // Mark transaction as failed if it exists
+            Transaction::where('reference', $reference)->update(['status' => 'failed']);
+
+            return redirect()->route('wallet.deposit')
+                ->with('status', 'error')
+                ->with('message', $result['message'] ?? 'Payment verification failed.');
 
         } catch (\Exception $e) {
-            return redirect()->route('wallet.deposit')->with('status', 'error')->with('message', $e->getMessage());
+            return redirect()->route('wallet.deposit')
+                ->with('status', 'error')
+                ->with('message', $e->getMessage());
         }
     }
 }
-
